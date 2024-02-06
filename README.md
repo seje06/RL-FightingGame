@@ -14,5 +14,15 @@ this is capston team
 - pip install mlagent==0.30.0
 - pip install protobuf==3.20.2
 - pip install torch==2.2.0
-  
+
+## unity(2022.3~)
+
+
+### 설명
+
+버전
+
+- ML Agents Release : 20 [다운 바로가기](https://github.com/Unity-Technologies/ml-agents/releases/tag/release_20)
+- ML Agents Extensions : 0.6.1
+- ML Agents : 2.3.0
 
