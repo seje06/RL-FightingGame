@@ -26,8 +26,8 @@ save_interval=20
 buffer_limit  = 50000
 batch_size    = 200
 
-load_model=True
-train_mode=False
+load_model=False
+train_mode=True
 run_step= 10000 if train_mode else 0
 test_step=100
 
@@ -48,7 +48,7 @@ else:
     save_path=load_path
 
 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+print(device)
 
 class ReplayBuffer():
     def __init__(self):
@@ -68,10 +68,16 @@ class ReplayBuffer():
             r_lst.append(r)
             s_prime_lst.append(s_prime)
             done_mask_lst.append([done_mask])
+        # 리스트를 텐서로 변환시 속도가 좋지않아 넘파이 배열로 변환
+        s_arr = np.array(s_lst, dtype=np.float32)
+        a_arr = np.array(a_lst, dtype=np.int64)
+        r_arr = np.array(r_lst)
+        s_prime_arr = np.array(s_prime_lst, dtype=np.float32)
+        done_mask_arr = np.array(done_mask_lst)
 
-        return torch.tensor(s_lst, dtype=torch.float).to(device), torch.tensor(a_lst).to(device), \
-               torch.tensor(r_lst).to(device), torch.tensor(s_prime_lst, dtype=torch.float).to(device), \
-               torch.tensor(done_mask_lst).to(device)
+        return torch.tensor(s_arr, dtype=torch.float).to(device), torch.tensor(a_arr, dtype=torch.int64).to(device), \
+               torch.tensor(r_arr).to(device), torch.tensor(s_prime_arr, dtype=torch.float).to(device), \
+               torch.tensor(done_mask_arr).to(device)
     
     def size(self):
         return len(self.buffer)
@@ -84,6 +90,7 @@ class Qnet(nn.Module):
         self.fc3 = nn.Linear(512, 4)
 
     def forward(self, x):
+        #x = x.to(self.fc1.weight.device)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
@@ -106,7 +113,7 @@ class Qnet_agent:
         if coin < epsilon and train_mode:
             return random.randint(0, 3)
         else : 
-            if memory_size>20000:
+            if memory_size>500:
                 return out.argmax().item()
             else:
                 return random.randint(0, 3) # 0,1,2,3중 랜덤으로 할당.
@@ -125,10 +132,17 @@ class Qnet_agent:
 
 def train(q, q_target, memory, optimizer,step_size):
     for i in range(2):
-        s,a,r,s_prime,done_mask = memory.sample(batch_size)
-
+        s,a,r,s_prime,done_mask = memory.sample(batch_size)# 랜덤으로 batch_size만큼 뽑음
+    
         q_out = q(s)
-        q_a = q_out.gather(1,a)
+        q_a = q_out.gather(1,a) #q_out은 batch_size만큼, 각 상태s에 대해서 행동들에대한 가치를 전부
+                                #가지고 있다 ex) [s1[가치1,가치2...],s2[],s3[]....] 
+                                #여기서 gather()의 인자 a는 [[a1],[a2],[a3]...] 똑같이 2차원이고 batchSize만큼있다
+                                #샘플에 넣을때[a]해준 이유다. 인자1은 a의 행,열중에 열로 내려가서 
+                                #해당값을 q_out의 인덱스로 쓰겠다는뜻이다. 가로로 적었지만 저걸 세로로 보면된다.
+                                #즉 a1값이 1이라고하면 s1[가치2]를 뽑고, a2값이 3이면 s2[가치4]를 뽑아서 q_a에 저장하는것이다.
+                                #비로소 q_a는 batchSize만큼 있는 각행동의 가치 집합이다.
+        #print(q_a) q_a를 print해보면 똑같이 2차원인걸 알수있고, 차원의 통일은 중요한부분이다.
         max_q_prime = q_target(s_prime).max(1)[0].unsqueeze(1)
         #only_r=0 if step_size<3000 else 1
         target = r + gamma * max_q_prime * done_mask
@@ -151,19 +165,19 @@ def main():
     spec=env.behavior_specs[behavior_name]
     env.reset()
     if train_mode:
-        engine_configuration_channel.set_configuration_parameters(time_scale=50)
+        engine_configuration_channel.set_configuration_parameters(time_scale=10)
     else :
         engine_configuration_channel.set_configuration_parameters(time_scale=2)
     dec, term=env.get_steps(behavior_name)
     actor_losses, critic_losses, scores, episode, score=[],[],[],0,0
-    q = Qnet()
+    q = Qnet().to(device)
 
     memory = ReplayBuffer()
     score = 0.0  
 
     optimizer = optim.Adam(q.parameters(), lr=learning_rate)
     agent=Qnet_agent(q,optimizer)
-    q_target = Qnet()
+    q_target = Qnet().to(device)
     q_target.load_state_dict(q.state_dict())
     
     for n_epi in range(10000):
@@ -175,7 +189,8 @@ def main():
             s=dec.obs[0]
             s=torch.tensor(s, dtype=torch.float).to(device)
             s=s.squeeze()
-            s=np.array(s)
+            s=s.cpu().detach().numpy() # CUDA 장치에서 호스트 메모리로 텐서를 복사 후 NumPy 배열로 변환
+            
             a = agent.sample_action(q,torch.from_numpy(s).float().to(device), epsilon, memory.size())   
             #print(a)
             a_tuple=ActionTuple()
@@ -190,7 +205,7 @@ def main():
             s_prime=term.obs[0] if done else dec.obs[0]
             s_prime=torch.tensor(s_prime, dtype=torch.float).to(device)
             s_prime=s_prime.squeeze()
-            s_prime=np.array(s_prime)
+            s_prime=s_prime.cpu().detach().numpy()
 
             done_mask = 0.0 if done else 1.0
             if train_mode:
@@ -205,7 +220,7 @@ def main():
 
         print(score)
 
-        if memory.size()>20000:
+        if memory.size()>200:
             if train_mode:
                 print("train")
                 train(q, q_target, memory, optimizer, memory.size())
