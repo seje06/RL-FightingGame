@@ -6,8 +6,8 @@ this is capston team
 
 -python
 
-- [Moving_DQN](Moving_DQN/)
--설명
+- [Moving_DQN](MovingFighting_DQN.py)
+
 
 설명-
 
