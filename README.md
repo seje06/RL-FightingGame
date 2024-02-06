@@ -19,7 +19,7 @@ OnnxMaker는 해당 딥러닝 모델을 Onnx파일로 만들어준다. 자기 �
 - pip install mlagent==0.30.0
 - pip install protobuf==3.20.2
 - pip install torch==2.2.0 (1.8.0~)
-- pip install torch torchvision torchaudio --index-url https://download.python.org/whl/cu117 (cuda사용시)
+- pip (install torch torchvision torchaudio --index-url https://download.python.org/whl/cu117) (cuda사용시)
 
 ## unity(2022.3~)
 
