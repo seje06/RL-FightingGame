@@ -2,12 +2,12 @@
 this is capston team
 
 
-#Small project
+# Small project
 
-##python
+## python
 
 - Moving_DQN](MovingFighting_DQN.py)
 
 
-###설명
+### 설명
 
