@@ -13,6 +13,8 @@ this is capston team
 
 ### 설명
 
+OnnxMaker는 해당 딥러닝 모델을 Onnx파일로 만들어준다. 자기 환경에 맞게 세부값 변경 해야함.
+
 버전 다운을 위한 명령어(터미널)
 - pip install mlagent==0.30.0
 - pip install protobuf==3.20.2
