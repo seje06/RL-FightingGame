@@ -2,13 +2,13 @@
 this is capston team
 
 
-## Small project
+# Small project
 
-### python(3.9.10)
+## python(3.9.10)
 
 - [Moving_DQN](MovingFighting_DQN.py)
 
-#### 설명
+### 설명
 
 버전 다운을 위한 명령어(터미널)
 - pip install mlagent==0.30.0
