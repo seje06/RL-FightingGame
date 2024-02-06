@@ -6,7 +6,8 @@ this is capston team
 
 ## python(3.9.10)
 
-### 코드
+### 코드들
+
 - [Moving_DQN](MovingFighting_DQN.py)
 
 ### 설명
