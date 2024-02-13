@@ -7,9 +7,8 @@ this is capston team
 
 -추천 폴더구조-
 
-C드라이브 -> ML -> RLVSCode -> python파일들
-                -> SavedModels -> 저장된파일들      
-          -> Unity_Program -> 빌드된 게임들
+![image](https://github.com/seje06/Trio/assets/124812852/feae64b1-4f07-4d4e-8e3d-a1380bcf5674)
+
           
 ## python(3.9.10)
 
