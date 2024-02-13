@@ -16,6 +16,7 @@ from mlagents_envs.side_channel.engine_configuration_channel import EngineConfig
 import mlagents_envs
 import mlagents
 import os
+import json
 
 learning_rate=0.002
 gamma=0.98
@@ -26,10 +27,13 @@ save_interval=20
 buffer_limit  = 50000
 batch_size    = 200
 
-load_model=True
-train_mode=False
-run_step= 10000 if train_mode else 0
-test_step=100
+getAction_StartPoint=15000
+train_StartPoint=10000
+
+load_model=False
+train_mode=True
+load_Buffer=False
+save_Buffer=False
 
 game="RL_Fighting"
 os_name=platform.system()
@@ -41,11 +45,13 @@ elif os_name=='Darwin':
 
 date_time=datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 save_path=f"C:/ML/SavedModels/ActionFighting_DQN/{date_time}"
-load_path=f"C:/ML/SavedModels/ActionFighting_DQN/20240207163908"
+load_path=f"C:/ML/SavedModels/ActionFighting_DQN/20240213164534"
 if not load_model:
     os.makedirs(save_path, exist_ok=True)
 else:
     save_path=load_path
+
+BufferFile_Name='ActionBuffer.json'
 
 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(torch.__version__)
@@ -112,13 +118,13 @@ class Qnet_agent:
         if coin < epsilon and train_mode:
             return random.randint(0, 8)
         else : 
-            if memory_size>15000:
+            if memory_size>getAction_StartPoint:
                 return out.argmax().item()
             else:
                 return random.randint(0, 8) # 0~8중 랜덤으로 할당.
 
     def save_model(self,network, optimizer):
-        print("save")
+        print("save model")
         torch.save({
             "network" : network.state_dict(),
             "optimizer" : optimizer.state_dict()
@@ -164,7 +170,7 @@ def main():
     spec=env.behavior_specs[behavior_name]
     env.reset()
     if train_mode:
-        engine_configuration_channel.set_configuration_parameters(time_scale=15)
+        engine_configuration_channel.set_configuration_parameters(time_scale=10)
     else :
         engine_configuration_channel.set_configuration_parameters(time_scale=2)
     dec, term=env.get_steps(behavior_name)
@@ -172,6 +178,12 @@ def main():
     q = Qnet().to(device)
 
     memory = ReplayBuffer()
+    
+    if load_Buffer and train_mode:
+        with open(BufferFile_Name,'r') as f:
+            memory.buffer=collections.deque(json.load(f))
+            print("load buffer")
+
     score = 0.0  
 
     optimizer = optim.Adam(q.parameters(), lr=learning_rate)
@@ -181,7 +193,7 @@ def main():
     
     for n_epi in range(10000):
         epsilon = max(0.01, 0.08 - 0.01*(n_epi/200)) #Linear annealing from 8% to 1%
-        #s, _ = env.reset()
+       
         done = False
 
         while not done:
@@ -206,8 +218,10 @@ def main():
             s_prime=s_prime.cpu().detach().numpy()
 
             done_mask = 0.0 if done else 1.0
+
             if train_mode:
-                memory.put((s,a,r,s_prime, done_mask))
+                memory.put((s.tolist(),a,r.tolist(),s_prime.tolist(), done_mask))
+
             s = s_prime
             #print(done)
             score += r
@@ -218,7 +232,12 @@ def main():
 
         print(score)
 
-        if memory.size()>10000:
+        if save_Buffer and train_mode:
+            with open(BufferFile_Name,'w') as f:
+                json.dump(list(memory.buffer),f)
+                print("save buffer")
+
+        if memory.size()>train_StartPoint:
             if train_mode:
                 print("train")
                 train(q, q_target, memory, optimizer, memory.size())
