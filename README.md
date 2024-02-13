@@ -10,6 +10,7 @@ this is capston team
 
 - [OnnxMaker](OnnxMaker.py)
 - [Moving_DQN](MovingFighting_DQN.py)
+- [Action_DQN](ActionFighting_DQN.py)
 
 ### 설명
 
@@ -35,5 +36,5 @@ OnnxMaker는 해당 딥러닝 모델을 Onnx파일로 만들어준다. 자기 �
 ## Built Games
 
 - [MovingFighting](../game/MovingFighting.zip)
-- [ActionFighting]()
+- [ActionFighting](../game/ActionFighting.zip)
 
