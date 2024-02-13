@@ -5,7 +5,7 @@ this is capston team
 
 ### 설명
 
--추천 폴더구조-
+#### 추천 폴더구조
 
 ![image](https://github.com/seje06/Trio/assets/124812852/feae64b1-4f07-4d4e-8e3d-a1380bcf5674)
 
