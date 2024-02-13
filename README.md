@@ -10,6 +10,7 @@ this is capston team
 
 - [OnnxMaker](OnnxMaker.py)
 - [Moving_DQN](MovingFighting_DQN.py)
+- [Action_DQN](ActionFighting_DQN.py)
 
 ### 설명
 
