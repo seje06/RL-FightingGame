@@ -8,6 +8,7 @@ this is capston team
 #### 추천 폴더구조
 
 ![image](https://github.com/seje06/Trio/assets/124812852/8e3854e6-db29-4e32-84c9-b5036d1d5172)
+
 C드라이브 바로 아래에 생성하면 된다.
 RLVSCode엔 py파일들, SavedModels엔 학습된 파일들, Unity_Program엔 빌드된 게임들이 있다
 ml-agents-release은 다운한 mlagents파일이다.
