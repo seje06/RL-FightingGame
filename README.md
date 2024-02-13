@@ -1,9 +1,16 @@
 # Trio
 this is capston team
 
-
 # Small project
 
+### 설명
+
+-추천 폴더구조-
+
+C드라이브 -> ML -> RLVSCode -> python파일들
+                -> SavedModels -> 저장된파일들      
+          -> Unity_Program -> 빌드된 게임들
+          
 ## python(3.9.10)
 
 ### 코드들
@@ -23,7 +30,6 @@ OnnxMaker는 해당 딥러닝 모델을 Onnx파일로 만들어준다. 자기 �
 - pip install torch torchvision torchaudio --index-url https://download.python.org/whl/cu117 (cuda사용시 명령어.url띄워쓰기https해야함)
 
 ## unity(2022.3~)
-
 
 ### 설명
 
