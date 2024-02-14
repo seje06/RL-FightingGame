@@ -16,6 +16,7 @@ from mlagents_envs.side_channel.engine_configuration_channel import EngineConfig
 import mlagents_envs
 import mlagents
 import os
+import json
 
 learning_rate=0.002
 gamma=0.98
@@ -26,10 +27,13 @@ save_interval=20
 buffer_limit  = 50000
 batch_size    = 200
 
+getAction_StartPoint=15000
+train_StartPoint=10000
+
 load_model=False
 train_mode=True
-run_step= 10000 if train_mode else 0
-test_step=100
+load_Buffer=False
+save_Buffer=False
 
 game="RL_Fighting"
 os_name=platform.system()
@@ -46,6 +50,8 @@ if not load_model:
     os.makedirs(save_path, exist_ok=True)
 else:
     save_path=load_path
+
+BufferFile_Name='MovingBuffer.json'
 
 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
@@ -90,7 +96,6 @@ class Qnet(nn.Module):
         self.fc3 = nn.Linear(512, 4)
 
     def forward(self, x):
-        #x = x.to(self.fc1.weight.device)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
@@ -113,7 +118,7 @@ class Qnet_agent:
         if coin < epsilon and train_mode:
             return random.randint(0, 3)
         else : 
-            if memory_size>500:
+            if memory_size>getAction_StartPoint:
                 return out.argmax().item()
             else:
                 return random.randint(0, 3) # 0,1,2,3중 랜덤으로 할당.
@@ -173,6 +178,12 @@ def main():
     q = Qnet().to(device)
 
     memory = ReplayBuffer()
+
+    if load_Buffer and train_mode:
+            with open(BufferFile_Name,'r') as f:
+                memory.buffer=collections.deque(json.load(f))
+                print("load buffer")
+
     score = 0.0  
 
     optimizer = optim.Adam(q.parameters(), lr=learning_rate)
@@ -220,7 +231,12 @@ def main():
 
         print(score)
 
-        if memory.size()>200:
+        if save_Buffer and train_mode and n_epi%10==0:
+            with open(BufferFile_Name,'w') as f:
+                json.dump(list(memory.buffer),f)
+                print("save buffer")
+
+        if memory.size()>train_StartPoint:
             if train_mode:
                 print("train")
                 train(q, q_target, memory, optimizer, memory.size())
