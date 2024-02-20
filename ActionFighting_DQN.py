@@ -24,14 +24,14 @@ action_size=1
 n_rollout= 50
 print_interval=10
 save_interval=20
-buffer_limit  = 50000
-batch_size    = 200
+buffer_limit  = 60000
+batch_size    = 1000
 
-getAction_StartPoint=15000
-train_StartPoint=10000
+getAction_StartPoint=31000
+train_StartPoint=30000
 
-load_model=False
-train_mode=True
+load_model=True
+train_mode=False
 load_Buffer=False
 save_Buffer=False
 
@@ -45,7 +45,7 @@ elif os_name=='Darwin':
 
 date_time=datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 save_path=f"C:/ML/SavedModels/ActionFighting_DQN/{date_time}"
-load_path=f"C:/ML/SavedModels/ActionFighting_DQN/20240213164534"
+load_path=f"C:/ML/SavedModels/ActionFighting_DQN/20240220162921"
 if not load_model:
     os.makedirs(save_path, exist_ok=True)
 else:
@@ -91,14 +91,16 @@ class ReplayBuffer():
 class Qnet(nn.Module):
     def __init__(self):
         super(Qnet, self).__init__()
-        self.fc1 = nn.Linear(8, 258)
-        self.fc2 = nn.Linear(258, 512)
-        self.fc3 = nn.Linear(512, 9)
+        self.fc1 = nn.Linear(7, 256)
+        self.fc2 = nn.Linear(256, 512)
+        self.fc3 = nn.Linear(512, 256)
+        self.fc4 = nn.Linear(256, 9)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = F.relu(self.fc3(x))
+        x = self.fc4(x)
         return x
     
 class Qnet_agent:
@@ -118,7 +120,7 @@ class Qnet_agent:
         if coin < epsilon and train_mode:
             return random.randint(0, 8)
         else : 
-            if memory_size>getAction_StartPoint:
+            if memory_size>getAction_StartPoint or not train_mode:
                 return out.argmax().item()
             else:
                 return random.randint(0, 8) # 0~8중 랜덤으로 할당.
@@ -181,7 +183,7 @@ def main():
     
     if load_Buffer and train_mode:
         with open(BufferFile_Name,'r') as f:
-            memory.buffer=collections.deque(json.load(f))
+            memory.buffer=collections.deque(json.load(f),maxlen=buffer_limit)
             print("load buffer")
 
     score = 0.0  
@@ -227,15 +229,15 @@ def main():
             score += r
             if memory.size()%100==0:
                 print(memory.size())
+                print(score)
+                score=0.0
+            if save_Buffer and train_mode and memory.size()%2000==0:
+                with open(BufferFile_Name,'w') as f:
+                    json.dump(list(memory.buffer),f)
+                    print("save buffer")
+
             if done:
                 break
-
-        print(score)
-
-        if save_Buffer and train_mode:
-            with open(BufferFile_Name,'w') as f:
-                json.dump(list(memory.buffer),f)
-                print("save buffer")
 
         if memory.size()>train_StartPoint:
             if train_mode:
