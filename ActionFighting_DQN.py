@@ -25,10 +25,10 @@ n_rollout= 50
 print_interval=10
 save_interval=20
 buffer_limit  = 60000
-batch_size    = 1000
+batch_size    = 500
 
-getAction_StartPoint=31000
-train_StartPoint=30000
+getAction_StartPoint=21000
+train_StartPoint=20000
 
 load_model=True
 train_mode=False
@@ -45,7 +45,7 @@ elif os_name=='Darwin':
 
 date_time=datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 save_path=f"C:/ML/SavedModels/ActionFighting_DQN/{date_time}"
-load_path=f"C:/ML/SavedModels/ActionFighting_DQN/20240220162921"
+load_path=f"C:/ML/SavedModels/ActionFighting_DQN/20240227213502"
 if not load_model:
     os.makedirs(save_path, exist_ok=True)
 else:
@@ -91,7 +91,7 @@ class ReplayBuffer():
 class Qnet(nn.Module):
     def __init__(self):
         super(Qnet, self).__init__()
-        self.fc1 = nn.Linear(7, 256)
+        self.fc1 = nn.Linear(5, 256)
         self.fc2 = nn.Linear(256, 512)
         self.fc3 = nn.Linear(512, 256)
         self.fc4 = nn.Linear(256, 9)
@@ -172,7 +172,7 @@ def main():
     spec=env.behavior_specs[behavior_name]
     env.reset()
     if train_mode:
-        engine_configuration_channel.set_configuration_parameters(time_scale=10)
+        engine_configuration_channel.set_configuration_parameters(time_scale=15)
     else :
         engine_configuration_channel.set_configuration_parameters(time_scale=2)
     dec, term=env.get_steps(behavior_name)
@@ -235,15 +235,15 @@ def main():
                 with open(BufferFile_Name,'w') as f:
                     json.dump(list(memory.buffer),f)
                     print("save buffer")
+                    
+            if memory.size()>train_StartPoint and train_mode:
+                if memory.size()!=0 and memory.size()%1000==0:
+                    print("train")
+                    train(q, q_target, memory, optimizer, memory.size())
+                    agent.save_model(q,optimizer)
 
             if done:
                 break
-
-        if memory.size()>train_StartPoint:
-            if train_mode:
-                print("train")
-                train(q, q_target, memory, optimizer, memory.size())
-                agent.save_model(q,optimizer)
 
         if n_epi%print_interval==0 and n_epi!=0:
             q_target.load_state_dict(q.state_dict())

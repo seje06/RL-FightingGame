@@ -24,14 +24,14 @@ action_size=1
 n_rollout= 50
 print_interval=10
 save_interval=20
-buffer_limit  = 50000
-batch_size    = 200
+buffer_limit  = 60000
+batch_size    = 1000
 
-getAction_StartPoint=15000
-train_StartPoint=10000
+getAction_StartPoint=33000
+train_StartPoint=30000
 
-load_model=False
-train_mode=True
+load_model=True
+train_mode=False
 load_Buffer=False
 save_Buffer=False
 
@@ -45,7 +45,7 @@ elif os_name=='Darwin':
 
 date_time=datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 save_path=f"C:/ML/SavedModels/MovingFighting_DQN/{date_time}"
-load_path=f"C:/ML/SavedModels/MovingFighting_DQN/20240204201636"
+load_path=f"C:/ML/SavedModels/MovingFighting_DQN/20240218163501"
 if not load_model:
     os.makedirs(save_path, exist_ok=True)
 else:
@@ -91,11 +91,11 @@ class ReplayBuffer():
 class Qnet(nn.Module):
     def __init__(self):
         super(Qnet, self).__init__()
-        self.fc1 = nn.Linear(4, 258)
-        self.fc2 = nn.Linear(258, 512)
+        self.fc1 = nn.Linear(4,256)
+        self.fc2 = nn.Linear(256, 512)
         self.fc3 = nn.Linear(512, 4)
 
-    def forward(self, x):
+    def forward(self, x): 
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
@@ -118,7 +118,7 @@ class Qnet_agent:
         if coin < epsilon and train_mode:
             return random.randint(0, 3)
         else : 
-            if memory_size>getAction_StartPoint:
+            if memory_size>getAction_StartPoint or not train_mode:
                 return out.argmax().item()
             else:
                 return random.randint(0, 3) # 0,1,2,3중 랜덤으로 할당.
@@ -170,7 +170,7 @@ def main():
     spec=env.behavior_specs[behavior_name]
     env.reset()
     if train_mode:
-        engine_configuration_channel.set_configuration_parameters(time_scale=10)
+        engine_configuration_channel.set_configuration_parameters(time_scale=15)
     else :
         engine_configuration_channel.set_configuration_parameters(time_scale=2)
     dec, term=env.get_steps(behavior_name)
@@ -181,7 +181,7 @@ def main():
 
     if load_Buffer and train_mode:
             with open(BufferFile_Name,'r') as f:
-                memory.buffer=collections.deque(json.load(f))
+                memory.buffer=collections.deque(json.load(f),maxlen=buffer_limit)
                 print("load buffer")
 
     score = 0.0  
@@ -219,22 +219,26 @@ def main():
             s_prime=s_prime.cpu().detach().numpy()
 
             done_mask = 0.0 if done else 1.0
+            
             if train_mode:
-                memory.put((s,a,r,s_prime, done_mask))
+                 memory.put((s.tolist(),a,r.tolist(),s_prime.tolist(), done_mask))
             s = s_prime
             #print(done)
             score += r
+
             if memory.size()%100==0:
                 print(memory.size())
+                print(score)
+                score=0.0
+            if save_Buffer and train_mode and memory.size()%2000==0:
+                with open(BufferFile_Name,'w') as f:
+                    json.dump(list(memory.buffer),f)
+                    print("save buffer")
+
             if done:
                 break
 
-        print(score)
-
-        if save_Buffer and train_mode and n_epi%10==0:
-            with open(BufferFile_Name,'w') as f:
-                json.dump(list(memory.buffer),f)
-                print("save buffer")
+        #print(score)
 
         if memory.size()>train_StartPoint:
             if train_mode:
