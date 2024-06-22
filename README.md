@@ -27,7 +27,7 @@ ml-agents-release은 다운한 mlagents파일이다.
 OnnxMaker는 해당 딥러닝 모델을 Onnx파일로 만들어준다. 자기 환경에 맞게 세부값 변경 해야함.
 
 #### 버전 다운을 위한 명령어(터미널)
-- pip install mlagent==0.30.0
+- pip install mlagents==0.30.0
 - pip install protobuf==3.20.2
 - pip install torch==2.2.0 (1.8.0~)
 - pip install torch torchvision torchaudio --index-url https://download.python.org/whl/cu117 (cuda사용시 명령어.url띄워쓰기https해야함)
