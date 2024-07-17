@@ -1,7 +1,6 @@
-# Trio
-this is capston team
+# RL to fighting Game
+provide method and structure that learn agent in game built from Unity with python.
 
-# Small project
 
 ### 설명
 
