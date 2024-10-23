@@ -1,7 +1,7 @@
 # RL to fighting Game
 provide method and structure that learn agent in game built from Unity with python.
 
-참고한 자료로는 '바닥부터 배우는 강화학습', '파이토치와 유니티 ML-Agents로 배우는 강화학습' 책들이다.
+참고한 자료로는 "바닥부터 배우는 강화학습", "파이토치와 유니티 ML-Agents로 배우는 강화학습" 책들이다.
 
 ### 설명
 
