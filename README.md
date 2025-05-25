@@ -42,7 +42,7 @@ OnnxMaker는 해당 딥러닝 모델을 Onnx파일로 만들어준다. 자기 �
 - ML Agents Extensions : 0.6.1
 - ML Agents : 2.3.0
 
-## Built Games
+## Games for Environment
 
 - [MovingFighting](../game/MovingFighting.zip)
 - [ActionFighting](../game/ActionFighting.zip)
